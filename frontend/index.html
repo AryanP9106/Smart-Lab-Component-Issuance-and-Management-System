@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Lab — Component Issuance & Management System</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-logo">SL</div>
+      <div>
+        <h1>Smart Lab</h1>
+        <p class="subtitle">Component Issuance &amp; Management System</p>
+      </div>
+    </div>
+    <div id="user-controls" class="user-controls hidden">
+      <div class="user-badge">
+        <span id="user-name-label"></span>
+        <span id="user-role-pill" class="pill"></span>
+      </div>
+      <button id="logout-btn" class="btn btn-secondary btn-sm">Logout</button>
+    </div>
+  </header>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- Auth View -->
+  <main id="auth-view" class="auth-container">
+    <section class="card auth-card">
+      <div class="auth-tabs">
+        <button class="tab-btn active" data-auth-tab="login">Sign In</button>
+        <button class="tab-btn" data-auth-tab="register">Register</button>
+      </div>
+
+      <form id="login-form" class="form">
+        <label>
+          Email
+          <input type="email" id="login-email" required placeholder="student@test.com" />
+        </label>
+        <label>
+          Password
+          <input type="password" id="login-password" required placeholder="••••••••" />
+        </label>
+        <button type="submit" class="btn btn-primary full-width">Sign In</button>
+
+        <div class="demo-box">
+          <p class="demo-title">Quick Demo Login</p>
+          <div class="demo-grid">
+            <button type="button" class="btn btn-ghost btn-sm" data-demo="student@test.com|student123">Student</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-demo="faculty@test.com|faculty123">Faculty</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-demo="incharge@test.com|incharge123">Lab Incharge</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-demo="admin@test.com|admin123">Admin</button>
+          </div>
+        </div>
+      </form>
+
+      <form id="register-form" class="form hidden">
+        <label>
+          Full Name
+          <input type="text" id="reg-name" required placeholder="Aryan Pattani" />
+        </label>
+        <label>
+          Email
+          <input type="email" id="reg-email" required placeholder="name@university.edu" />
+        </label>
+        <label>
+          Enrollment No (Optional)
+          <input type="text" id="reg-enroll" placeholder="92400957041" />
+        </label>
+        <label>
+          Role
+          <select id="reg-role">
+            <option value="student">Student</option>
+            <option value="faculty">Faculty</option>
+            <option value="incharge">Lab Incharge</option>
+            <option value="admin">Admin</option>
+          </select>
+        </label>
+        <label>
+          Password (min 6 chars)
+          <input type="password" id="reg-password" required minlength="6" placeholder="••••••••" />
+        </label>
+        <button type="submit" class="btn btn-primary full-width">Create Account</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- Main Dashboard View -->
+  <main id="app-view" class="app-container hidden">
+    <nav class="nav-tabs" id="main-nav">
+      <button class="nav-btn active" data-section="catalog">Catalog</button>
+      <button class="nav-btn" data-section="my-issues">My Requests</button>
+      <button class="nav-btn staff-only hidden" data-section="manage-issues">Manage Issues</button>
+      <button class="nav-btn staff-only hidden" data-section="reports">Reports &amp; Audit</button>
+      <button class="nav-btn admin-only hidden" data-section="users">Users</button>
+    </nav>
+
+    <!-- Catalog Section -->
+    <section id="section-catalog" class="section">
+      <div class="section-header">
+        <div>
+          <h2>Lab Component Catalog</h2>
+          <p class="muted">Browse hardware inventory across labs and submit issuance requests.</p>
+        </div>
+        <div class="actions incharge-only hidden">
+          <button id="open-lab-modal-btn" class="btn btn-secondary btn-sm">+ Add Lab</button>
+          <button id="open-comp-modal-btn" class="btn btn-primary btn-sm">+ Add Component</button>
+        </div>
+      </div>
+
+      <div class="filter-bar card">
+        <input type="search" id="catalog-search" placeholder="Search by name, category, or lab..." />
+        <select id="catalog-lab-filter">
+          <option value="">All Labs</option>
+        </select>
+        <select id="catalog-avail-filter">
+          <option value="">All Stock</option>
+          <option value="true">Available Only</option>
+          <option value="false">Out of Stock</option>
+        </select>
+        <button id="catalog-refresh-btn" class="btn btn-secondary btn-sm">Refresh</button>
+      </div>
+
+      <div id="catalog-grid" class="card-grid"></div>
+    </section>
+
+    <!-- My Requests Section -->
+    <section id="section-my-issues" class="section hidden">
+      <div class="section-header">
+        <div>
+          <h2>My Requests &amp; Borrowed Items</h2>
+          <p class="muted">Track approval status, due dates, and return history.</p>
+        </div>
+        <select id="my-issues-status-filter">
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="issued">Issued</option>
+          <option value="returned">Returned</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+      <div class="card table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Component</th>
+              <th>Lab</th>
+              <th>Qty</th>
+              <th>Requested</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="my-issues-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Manage Issues Section -->
+    <section id="section-manage-issues" class="section hidden">
+      <div class="section-header">
+        <div>
+          <h2>Manage Component Issuance</h2>
+          <p class="muted">Approve requests, confirm physical handover, and record component returns.</p>
+        </div>
+        <select id="manage-status-filter">
+          <option value="">All Statuses</option>
+          <option value="pending" selected>Pending</option>
+          <option value="approved">Approved (Ready to Issue)</option>
+          <option value="issued">Currently Issued</option>
+          <option value="returned">Returned</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+      <div class="card table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Requester</th>
+              <th>Component</th>
+              <th>Qty</th>
+              <th>Purpose</th>
+              <th>Dates</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="manage-issues-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Reports Section -->
+    <section id="section-reports" class="section hidden">
+      <div class="section-header">
+        <div>
+          <h2>Inventory Reports &amp; Audit Trail</h2>
+          <p class="muted">Live stock health, overdue returns, and activity history.</p>
+        </div>
+        <button id="refresh-reports-btn" class="btn btn-secondary btn-sm">Refresh Reports</button>
+      </div>
+
+      <div id="kpi-grid" class="kpi-grid"></div>
+
+      <div class="two-col">
+        <div class="card">
+          <h3>Low Stock Alerts (&le; 5 available)</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Component</th>
+                  <th>Lab</th>
+                  <th>Available / Total</th>
+                </tr>
+              </thead>
+              <tbody id="low-stock-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Overdue Returns</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Component</th>
+                  <th>Qty</th>
+                  <th>Due Date</th>
+                  <th>Overdue</th>
+                </tr>
+              </thead>
+              <tbody id="overdue-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card incharge-only hidden" style="margin-top: 1.25rem;">
+        <h3>Recent Activity Log</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Time (UTC)</th>
+                <th>Actor</th>
+                <th>Action</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="activity-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Users Section (Admin) -->
+    <section id="section-users" class="section hidden">
+      <div class="section-header">
+        <div>
+          <h2>User &amp; Role Management</h2>
+          <p class="muted">Manage registered accounts and access roles.</p>
+        </div>
+      </div>
+      <div class="card table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Enrollment</th>
+              <th>Role</th>
+              <th>Update Role</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal -->
+  <div id="modal-backdrop" class="modal-backdrop hidden">
+    <div class="card modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title">Action</h3>
+        <button id="modal-close-btn" class="btn btn-ghost btn-sm">&times;</button>
+      </div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
